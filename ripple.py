@@ -1,3 +1,13 @@
+# ripple - python3 repl skeleton @ david barkhuizen Jan 2014
+
+# python3 check
+#
+import sys
+(major_version_number, minor_version_number, a, b, c) = sys.version_info
+if major_version_number < 3 :
+    print('python 3 required')
+    sys.exit(1)
+
 import os
 
 class EvaluatorStates(object):
