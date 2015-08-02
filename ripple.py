@@ -10,24 +10,59 @@ if major_version_number < 3 :
 
 import os
 
+class Command(object):
+    def __init__(self, token, function, description = None):
+        '''init
+
+        token
+        - will be lowercased
+
+        function
+        - takes a list of parameters
+        - returns a string list for screen display
+        '''
+        
+        self.token = token.lower().strip()
+        self.function = function
+        self.description = description
+
 class EvaluatorStates(object):
     QUIT = 'quit'
 
+# define commands here
+#
+import_commands = []
+
 class Evaluator(object):
     
-    # command tokens
-    QUIT_COMMAND_TOKEN = 'quit'    
-        
-    # command token separator/whitespace
-    COMMAND_TOKEN_SEPARATOR = ' '
-        
+    SEPARATOR_TOKEN = ' '
+    
     def __init__(self):
-        self.state = { EvaluatorStates.QUIT : False }
-        self.commands = { Evaluator.QUIT_COMMAND_TOKEN : self.quit_command }    
+        
+        self.state = { EvaluatorStates.QUIT : False }        
+        
+        self.commands = {}
 
-    def quit_command(self, params):
+        quit_cmd = Command('quit', self.quit_command_fn)
+        exit_cmd = Command('exit', self.quit_command_fn)
+        list_cmd = Command('list', self.list_command_fn)
+        help_cmd = Command('help', self.help_command_fn)
+
+        commands = [quit_cmd, exit_cmd, list_cmd, help_cmd]
+        commands.extend(import_commands)
+
+        for command in commands:
+            self.commands[command.token] = command
+
+    def help_command_fn(self, params = None):
+        return ['no can hear you scream']
+
+    def list_command_fn(self, params = None):
+        return sorted([x.token + (' - ' + x.description if x.description is not None else '') for x in self.commands.values()])
+
+    def quit_command_fn(self, params = None):
         self.state[EvaluatorStates.QUIT] = True  
-        return ['quitting']  
+        return ['quitting...']  
         
     def evaluate(self, raw_sequence):
         '''
@@ -36,18 +71,18 @@ class Evaluator(object):
         returns text line output
         '''  
 
-        tokens = raw_sequence.split(Evaluator.COMMAND_TOKEN_SEPARATOR)
+        tokens = raw_sequence.split(Evaluator.SEPARATOR_TOKEN)
         
         if len(tokens) == 0:
             return []
         
         command_token = tokens[0]
-        command_parameters = tokens [1:]        
+        command_parameters = tokens[1:]        
 
         output_lines = ['unknown command']
 
         if command_token in self.commands.keys():
-            output_lines = self.commands[command_token](command_parameters)
+            output_lines = self.commands[command_token].function(command_parameters)
             
         return output_lines
 
